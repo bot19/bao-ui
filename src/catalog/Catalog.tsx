@@ -6,7 +6,7 @@ import {
   IconSearch,
   IconX,
 } from '@tabler/icons-react'
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { BrandLockup, BrandWordmark } from '@/components/brand/BrandLockup'
 import { SheetHeader } from '@/components/layout/SheetHeader'
 import { MapControlsRail } from '@/components/nav/MapControlsRail'
@@ -35,7 +35,14 @@ import { UserAvatar } from '@/components/user/UserAvatar'
 import { ratingToCssColor } from '@/lib/ratingColor'
 import type { PlaceStatus } from '@/lib/placeStatus'
 
-const SECTIONS = [
+const PAGES = [
+  ['tokens', 'Tokens'],
+  ['components', 'Components'],
+] as const
+
+type PageId = (typeof PAGES)[number][0]
+
+const TOKEN_SECTIONS = [
   ['type', 'Type & colour'],
   ['icon-buttons', 'Icon buttons'],
   ['buttons', 'Text buttons'],
@@ -48,6 +55,41 @@ const SECTIONS = [
   ['loading', 'Loading'],
 ] as const
 
+const COMPONENT_SECTIONS = [
+  ['forms', 'Forms'],
+  ['nav', 'Nav'],
+] as const
+
+const SECTIONS_BY_PAGE = {
+  tokens: TOKEN_SECTIONS,
+  components: COMPONENT_SECTIONS,
+} as const
+
+type CatalogLocation = {
+  page: PageId
+  section: string | null
+}
+
+function isPageId(value: string | null): value is PageId {
+  return value === 'tokens' || value === 'components'
+}
+
+function readLocation(): CatalogLocation {
+  const params = new URLSearchParams(window.location.search)
+  const rawPage = params.get('page')
+  const page: PageId = isPageId(rawPage) ? rawPage : 'tokens'
+  const rawSection = params.get('section')
+  const known = SECTIONS_BY_PAGE[page].some(([id]) => id === rawSection)
+  return { page, section: known ? rawSection : null }
+}
+
+function hrefFor(page: PageId, section: string | null): string {
+  const params = new URLSearchParams()
+  params.set('page', page)
+  if (section) params.set('section', section)
+  return `?${params.toString()}`
+}
+
 const PHOTO =
   'data:image/svg+xml,' +
   encodeURIComponent(
@@ -55,48 +97,133 @@ const PHOTO =
   )
 
 export function Catalog() {
+  const [location, setLocation] = useState(readLocation)
+  const sections = SECTIONS_BY_PAGE[location.page]
+
+  useEffect(() => {
+    const fromUrl = readLocation()
+    setLocation(fromUrl)
+    const canonical = hrefFor(fromUrl.page, fromUrl.section)
+    if (window.location.search !== canonical) {
+      history.replaceState(null, '', canonical)
+    }
+
+    function onPopState() {
+      setLocation(readLocation())
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+
+  useEffect(() => {
+    if (location.section) {
+      document.getElementById(location.section)?.scrollIntoView()
+      return
+    }
+    window.scrollTo({ top: 0 })
+  }, [location])
+
+  function go(next: CatalogLocation) {
+    const href = hrefFor(next.page, next.section)
+    if (window.location.search !== href) history.pushState(null, '', href)
+    setLocation(next)
+  }
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <header className="max-w-2xl">
-        <p className="text-sm font-medium text-primary">Bao UI</p>
-        <h1 className="mt-1 font-display text-3xl text-ink">
-          Food Friends baseline
+    <div className="mx-auto max-w-5xl px-4 sm:px-6">
+      <header className="sticky top-0 z-40 -mx-4 border-b border-neutral-200 bg-neutral-100/95 px-4 pt-6 pb-4 backdrop-blur sm:-mx-6 sm:px-6">
+        <h1 className="font-display text-3xl text-ink">
+          BAO UI <span className="text-neutral-400">v{__APP_VERSION__}</span>
         </h1>
-        <p className="mt-3 text-neutral-700">
-          Shared components are the files copied from Food Friends. Everything
-          else is the one-off markup still living in that app, grouped with
-          the control it duplicates. Labels name the source file.
-        </p>
+
+        <div role="tablist" aria-label="Catalog pages" className="mt-4 flex gap-6">
+          {PAGES.map(([id, label]) => {
+            const selected = location.page === id
+            return (
+              <a
+                key={id}
+                href={hrefFor(id, null)}
+                role="tab"
+                aria-selected={selected}
+                className={
+                  selected
+                    ? 'border-b-2 border-ink pb-1 text-sm font-medium text-ink'
+                    : 'border-b-2 border-transparent pb-1 text-sm font-medium text-neutral-500 hover:text-ink'
+                }
+                onClick={(event) => {
+                  event.preventDefault()
+                  go({ page: id, section: null })
+                }}
+              >
+                {label}
+              </a>
+            )
+          })}
+        </div>
+
+        <nav aria-label="Catalog sections" className="mt-4 flex flex-wrap gap-2">
+          {sections.map(([id, label]) => {
+            const selected = location.section === id
+            return (
+              <a
+                key={id}
+                href={hrefFor(location.page, id)}
+                aria-current={selected ? 'true' : undefined}
+                className={
+                  selected
+                    ? 'rounded-full bg-ink px-3 py-1 text-sm text-white shadow-sm'
+                    : 'rounded-full bg-white px-3 py-1 text-sm text-neutral-700 shadow-sm hover:text-ink'
+                }
+                onClick={(event) => {
+                  event.preventDefault()
+                  go({ page: location.page, section: id })
+                }}
+              >
+                {label}
+              </a>
+            )
+          })}
+        </nav>
       </header>
 
-      <nav
-        aria-label="Catalog sections"
-        className="mt-6 flex flex-wrap gap-2"
-      >
-        {SECTIONS.map(([id, label]) => (
-          <a
-            key={id}
-            href={`#${id}`}
-            className="rounded-full bg-white px-3 py-1 text-sm text-neutral-700 shadow-sm hover:text-ink"
-          >
-            {label}
-          </a>
-        ))}
-      </nav>
-
-      <div className="mt-10 space-y-14">
-        <TypeAndColour />
-        <IconButtons />
-        <TextButtons />
-        <Fields />
-        <Choices />
-        <Feedback />
-        <Chips />
-        <People />
-        <Chrome />
-        <Loading />
+      <div className="space-y-14 py-10">
+        {location.page === 'tokens' ? <TokensPage /> : <ComponentsPage />}
       </div>
     </div>
+  )
+}
+
+function TokensPage() {
+  return (
+    <>
+      <TypeAndColour />
+      <IconButtons />
+      <TextButtons />
+      <Fields />
+      <Choices />
+      <Feedback />
+      <Chips />
+      <People />
+      <Chrome />
+      <Loading />
+    </>
+  )
+}
+
+function ComponentsPage() {
+  return (
+    <>
+      <Section id="forms" title="Forms">
+        <p className="text-sm text-neutral-600">
+          Signup, login, review, and the other full forms land here.
+        </p>
+      </Section>
+      <Section id="nav" title="Nav">
+        <p className="text-sm text-neutral-600">
+          The whole nav drawer lands here, not the individual buttons.
+        </p>
+      </Section>
+    </>
   )
 }
 
@@ -731,7 +858,7 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <section id={id} className="scroll-mt-6">
+    <section id={id} className="scroll-mt-56">
       <h2 className="font-display text-2xl text-ink">{title}</h2>
       {note ? <p className="mt-2 max-w-2xl text-sm text-neutral-600">{note}</p> : null}
       <div className="mt-4">{children}</div>
