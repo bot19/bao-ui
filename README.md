@@ -10,6 +10,15 @@ This repo is the place changes get made. Apps should consume a published package
 
 The page is for resolving consistency. It is not a published API yet.
 
+## Consistency
+
+Work through these one at a time. Each item is a control that ships in more than one style in Food Friends. The catalog shows the variants side by side, labeled with the source file.
+
+- [ ] **Text buttons.** The same ink button appears with six different paddings. Most disabled states use 60% opacity; the category action uses 50% and has no hover style.
+- [ ] **Fields.** Auth and review forms use a shadowed `neutral-300` border. Search uses `neutral-200` and no shadow. The email and friend-code fields are written as `text-sm` with no focus ring, while the global CSS forces inputs to 16px so iOS does not zoom.
+- [ ] **Icon buttons.** Signup and login draw their own back button. Its hover is `neutral-100`; `IconButton` uses `neutral-300`. The map add button overrides the shared colours with a purple circle.
+- [ ] **Avatars.** The default is a rounded square. Friend rows and the leaderboard pass `rounded-full`.
+
 ## How apps will consume it
 
 1. Change components here and check them on the catalog page.
