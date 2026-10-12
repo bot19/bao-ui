@@ -6,7 +6,7 @@ import {
   IconSearch,
   IconX,
 } from '@tabler/icons-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { BrandLockup, BrandWordmark } from '@/components/brand/BrandLockup'
 import { SheetHeader } from '@/components/layout/SheetHeader'
 import { MapControlsRail } from '@/components/nav/MapControlsRail'
@@ -90,6 +90,9 @@ function hrefFor(page: PageId, section: string | null): string {
   return `?${params.toString()}`
 }
 
+/** Space between the sticky header and a section heading, at the top and when scrolled. */
+const SECTION_GAP_PX = 24
+
 const PHOTO =
   'data:image/svg+xml,' +
   encodeURIComponent(
@@ -99,6 +102,22 @@ const PHOTO =
 export function Catalog() {
   const [location, setLocation] = useState(readLocation)
   const sections = SECTIONS_BY_PAGE[location.page]
+
+  useLayoutEffect(() => {
+    const header = document.querySelector('[data-catalog-header]')
+    if (!(header instanceof HTMLElement)) return
+
+    const sync = () => {
+      document.documentElement.style.scrollPaddingTop = `${header.offsetHeight + SECTION_GAP_PX}px`
+    }
+    sync()
+    const observer = new ResizeObserver(sync)
+    observer.observe(header)
+    return () => {
+      observer.disconnect()
+      document.documentElement.style.scrollPaddingTop = ''
+    }
+  }, [])
 
   useEffect(() => {
     const fromUrl = readLocation()
@@ -131,7 +150,10 @@ export function Catalog() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6">
-      <header className="sticky top-0 z-40 -mx-4 border-b border-neutral-200 bg-neutral-100/95 px-4 pt-6 pb-4 backdrop-blur sm:-mx-6 sm:px-6">
+      <header
+        data-catalog-header
+        className="sticky top-0 z-40 -mx-4 border-b border-neutral-200 bg-neutral-100/95 px-4 pt-6 pb-4 backdrop-blur sm:-mx-6 sm:px-6"
+      >
         <h1 className="font-display text-3xl text-ink">
           BAO UI <span className="text-neutral-400">v{__APP_VERSION__}</span>
         </h1>
@@ -186,7 +208,7 @@ export function Catalog() {
         </nav>
       </header>
 
-      <div className="space-y-14 py-10">
+      <div className="space-y-14 pt-6 pb-10">
         {location.page === 'tokens' ? <TokensPage /> : <ComponentsPage />}
       </div>
     </div>
@@ -858,7 +880,7 @@ function Section({
   children: ReactNode
 }) {
   return (
-    <section id={id} className="scroll-mt-56">
+    <section id={id}>
       <h2 className="font-display text-2xl text-ink">{title}</h2>
       {note ? <p className="mt-2 max-w-2xl text-sm text-neutral-600">{note}</p> : null}
       <div className="mt-4">{children}</div>
