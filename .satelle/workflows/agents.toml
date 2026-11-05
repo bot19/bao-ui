@@ -1,0 +1,180 @@
+# workflows/agents.toml — the agents layer: how each agent runs (backend + tool
+# grant). It sits beside done.toml and step.toml because it is the other half of what
+# those declare: step.toml names a performer and its gates by SECTION NAME, and the
+# [<name>] sections here say what those names actually run (sty_10f732ed).
+# COMMITTED SUBSTRATE by product default (sty_552d2d87): this file declares the
+# roles your workflows name; a clone needs it to run any gated step. Prefer
+# profile= into ~/.satelle/agents.toml for shared HOW; put secrets in the
+# gitignored satelle.local.toml — never here. See "satelle help global-agents".
+# FULLY DEFINED by init (no hidden coded configuration, sty_892517e7): every
+# value below is the ACTIVE default, written out so the operator sees exactly
+# what runs. Edit freely. This file is REQUIRED in an initialized repo
+# (sty_d0d6bb67): a missing or unparseable agents.toml refuses to run — delete
+# it and re-run "satelle init" to reseed the default.
+#
+# The agent operating model (see the satelle-agent-model principle):
+#   - executor  — runs IN-LOOP as the driving session (context, principles,
+#     skills via the substrate). Not an isolated process.
+#   - reviewer  — an ISOLATED, READ-ONLY sub-process: the rubric rides as its
+#     system prompt; it judges, never mutates (the default claude template
+#     denylists Write/Edit/NotebookEdit/Bash on top of the read-only grant).
+#   - any OTHER top-level [<name>] is an optional named agent, always isolated;
+#     a route step allocates its work to it via agent: <name>, and entering that
+#     step DISPATCHES the work to this binding's command (item on stdin, the
+#     step's skills: rubric as the system prompt, tools/model from the binding).
+#     A step naming an agent with NO binding here REFUSES the transition. A
+#     named agent that MUTATES declares its own full command template + wide
+#     grant; its model key pins the step's model ({model} in the template), so
+#     per-step model selection is pure configuration.
+#   - Per-GATE model: name a second reviewer binding and allocate it by name
+#     (a step's reviewer_agent:, or a gate section's agent:). The binding is the
+#     source of command template, tools AND model, so a gate on a different
+#     model is a second [<name>] section — not an attribute on the route. See
+#     satelle help agent-dispatch and the satelle-route-standard principle.
+# role= is the binding's declared contract (reviewer | agent); inference from
+# the section name is a fallback, not the norm — declare it.
+#
+# Define process/step agents HERE (a [<name>] binding + an agent: <name> step),
+# NEVER in a harness-specific agent dir (e.g. .claude/agents): those are invisible
+# to satelle — it cannot see, validate, dispatch, or carry them repo-agnostically —
+# and they silently pin the repo to one CLI vendor. See "satelle help agent-dispatch".
+#
+# TRANSPORT (epic:agent-dispatch-transport): interface = "command" | "acp".
+# Omit interface (or set "command") for a FULL multi-token command template — any
+# CLI (Claude Code, grok -p, wrappers). Optional interface = "acp" for an
+# ACP-capable spawn only (e.g. command = "grok agent stdio"); system/payload ride
+# the protocol, not {placeholders}. Claude has no ACP — keep it on command.
+# Defaults in this scaffold stay command; do not flip [reviewer] to acp here.
+#
+# THE COMMAND TEMPLATE (interface=command): an isolated binding requires a FULL
+# multi-token command (binary + argv). The only bare single-token value is
+# "in-loop" (the driving session performs the step — no subprocess). An
+# empty/omitted command on [reviewer] inherits the full default claude template.
+# Bare tokens like "claude" / "grok" are rejected by satelle agent
+# validate — run satelle init to expand a legacy bare preset, or write the full
+# argv yourself. Placeholders — each one argv token: {system} {tools} {model}
+# {effort} {settings} {payload}. The work-item body is ALWAYS also written on stdin
+# (dual delivery). Empty {model}/{effort}/{settings} drop that flag; empty {payload}
+# does not. effort= pins reasoning/thinking level (e.g. high). secondary= names a
+# fallback binding for one retry on rate-limit/unavailable (or set [defaults]
+# secondary = "…"). See satelle help agent-dispatch.
+# Claude's default uses stdin only (no -p {payload}) so the prompt is not
+# double-fed; argv-first CLIs (grok) opt in with -p {payload}. Example:
+#   command = "grok -p {payload} --system-prompt-override {system} --tools read_file,grep,list_dir --always-approve --output-format plain --max-turns 8 --no-subagents"
+# Optional ACP example (not enabled by default):
+#   # interface = "acp"
+#   # command   = "grok agent stdio"
+#
+# PER-BINDING ENV — point a step at an alternate model backend WITHOUT a wrapper
+# binary. A binding may set env = { KEY = "value" }; each value may reference the
+# [vars] KV via ${NAME}. The resolved env is layered onto the dispatched agent's
+# process (binding keys win). Put SECRETS (API keys) under [vars] in the gitignored
+# satelle.local.toml — NEVER here (this file is committed). Example — GLM via its
+# Anthropic-compatible endpoint, same claude CLI, model reads naturally:
+#   [planner]
+#   command = "claude -p --append-system-prompt {system} --allowedTools {tools} --model {model}"
+#   model   = "glm-4.6"
+#   env     = { ANTHROPIC_BASE_URL = "https://api.z.ai/api/anthropic", ANTHROPIC_AUTH_TOKEN = "${GLM_API_KEY}" }
+# and in satelle.local.toml (gitignored):
+#   [vars]
+#   GLM_API_KEY = "sk-…"
+#
+# REUSING A MACHINE-WIDE PROFILE (profile=) — optional. An operator working across
+# several repos can define reusable EXECUTION profiles once in ~/.satelle/agents.toml
+# (see "satelle agent profiles" / "satelle agent migrate") and have a binding here
+# name one:
+#   [reviewer]
+#   profile = "claude-opus"     # explicit reference — inherits command/tools/model/…
+#   effort  = "low"             # anything stated here still WINS over the profile
+# The reference is always explicit: a profile that merely SHARES this section's name
+# is never merged in, so a repo with no profile= resolves identically whether or not
+# the machine has a catalog. Precedence: repo inline > referenced profile > an opt-in
+# [defaults] use_global_roles role default > satelle's embedded fallback. The catalog
+# is execution configuration ONLY — workflows and skills stay repo substrate here.
+#
+# DEFAULT LIVE TRANSPORT (epic:model-selection child 2) — a binding with no
+# interface= that is opened as a LIVE session (a rework relay seat, a
+# rework.consult binding) resolves to the first
+# transport below that can actually open its AUTHORED command: stream only for
+# a Claude command whose argv really parses as a live stream session (a
+# one-shot command, e.g. one carrying --append-system-prompt {system}, does
+# not — {system}/{payload} ride the live protocol, not argv); acp only for any
+# other spawn line that parses as an ACP spawn. A binding with no command yet
+# is a candidate only for a transport with a shipped default line to fill in
+# (stream has one; acp has none — it needs an authored spawn line satelle
+# cannot guess), so an unauthored command never resolves to acp regardless of
+# this order. A one-shot dispatch (gate reviewer, planner, edge advisor)
+# always resolves to command, unaffected by this order. An explicit interface=
+# always wins over both.
+# [defaults]
+# live_interfaces = ["stream", "acp"]   # shipped default — list only "acp" (or
+#                                        # only "stream") to exclude a
+#                                        # transport; mechanism decides which
+#                                        # one an authored command can serve,
+#                                        # not list order
+# idle_timeout    = "5m"                # shipped default when a binding sets
+#                                        # none of its own — a dispatch is
+#                                        # STALLED (and stopped) only after
+#                                        # this long with NO real event (tool
+#                                        # start/end, message, usage) —
+#                                        # heartbeats alone never reset it. A
+#                                        # binding overrides with its own
+#                                        # idle_timeout = "…" below.
+#
+# TIMEOUT vs IDLE_TIMEOUT (sty_752c4ef2): idle_timeout is what actually bounds
+# a dispatch — a progressing agent is never cut off by elapsed time alone.
+# timeout= is an OPTIONAL hard ceiling on one dispatch's total wall-clock time,
+# UNSET by default; set it on a binding only when you want a genuine upper
+# bound regardless of progress (e.g. [coder] timeout = "30m"). A stall is
+# ledgered and refused as its own outcome, "stalled" — distinct from a
+# timeout= ceiling firing.
+
+[executor]
+role    = "agent"              # declared contract (agent | reviewer); do not leave inferred
+command = "in-loop"            # the orchestrator/driving session itself
+
+[reviewer]
+# The FULL command template — transparent and swappable (sty_892517e7): satelle
+# substitutes {system}/{tools}/{model}/{settings}/{payload} (each one argv token);
+# payload is always also on stdin. An empty model drops the --model pair. Point
+# this at ANY agent CLI by rewriting the multi-token command. Bare single-token
+# presets (claude/grok) are not accepted — the real argv must be literal.
+role    = "reviewer"           # declared contract; inference is a fallback, not the norm
+command = "claude -p --output-format json --disallowedTools Write,Edit,NotebookEdit,Bash --append-system-prompt {system} --allowedTools {tools} --model {model} --effort {effort}"
+tools   = "Read,Grep,Glob"     # read-only grant — widen at your own risk (claude template default; a grok full template bakes its own grok-named read-only grant)
+model   = ""                   # empty is selected deliberately, not left to the CLI's own default (sty_7069bced): binding > step/agent > inherited in-loop session > story creator's session > the first entry of this executable's [model_order] list > cli-default, each recorded as the source next to the resolved id. Each binding may still pin its own (e.g. "sonnet"). A workflow gate/node model="…" overrides this for that gate only without a second binding (sty_19456622). See "satelle help agent-dispatch" § Model selection.
+
+# [model_order] — the order an UNSET model follows (sty_4fde0a50), one list per
+# executable (claude, grok). A binding that leaves model= empty and has no
+# same-executable inherited or creator session model takes the FIRST entry of ITS
+# OWN executable's list; a name from one list is never applied to another
+# executable. An entry is a name, or an array of names that are one rank (an
+# alias and its resolved id, e.g. ["opus", "claude-opus-5-5"]); the first name is
+# applied. An executable with no list falls back to the CLI's own default. A
+# binding's model= pin always wins. See "satelle help agent-dispatch" § Model selection.
+[model_order]
+claude = ["opus", "sonnet", "haiku"]
+grok   = ["grok-4.7"]
+
+# A named EXECUTOR agent for isolated mutating steps (e.g. a commit/push step),
+# with an explicit full command template and a wide grant:
+# [commit-agent]
+# role    = "agent"
+# command = "claude -p --append-system-prompt {system} --allowedTools {tools}"
+# tools   = "Read,Edit,Bash(git:*),Bash(gh:*),Bash(make:*),Bash(satelle:*)"
+#
+# WHO PERFORMS A STEP — the driving session is the in-loop executor: the shipped
+# route's coded step is agent = "executor", so that session performs in_progress,
+# integration, release and the close itself. Nothing below is required.
+#
+# An optional ONE-SHOT coder a repo may point the coded step's agent= at (no
+# interface = "stream"; it runs once per dispatch):
+#
+# [coder]
+# role    = "agent"
+# command = "claude -p --append-system-prompt {system} --allowedTools {tools} --model {model} --effort {effort}"
+# tools   = "Read,Grep,Glob,Edit,Write,Bash(satelle:*)"
+#
+# The only live relay is satelle story rework: off unless a step sets
+# rework = { consult, rounds }, and its consult binding must be live-capable
+# (interface = "acp" or "stream", with an authored command= or profile=).

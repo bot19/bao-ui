@@ -2,3 +2,25 @@ node_modules
 dist
 .DS_Store
 *.local
+.claude/settings.json
+
+# >>> satelle (managed) >>>
+# .satelle/ is this repo's process substrate (workflows, skills, principles,
+# constitution, satelle.toml, tasks, documents) and is tracked in git; only the
+# machine-local state below is ignored. The re-include overrides a machine-wide
+# core.excludesFile that ignores .satelle/. satelle adds only entries this file
+# does not already settle; any rule written here or elsewhere is kept.
+# Runtime state lives under ~/.satelle/<repo-key>/, outside the repo.
+!.satelle/
+.satelle/**/.env
+.satelle/logs
+.satelle/hooks
+.satelle/deployed.version
+.satelle/*.local.toml
+.satelle/workflows/agents.local.toml
+.satelle/satelle
+.satelle/tasks/*/exe_*.md
+.satelle/tasks/*/output-exe_*.md
+sty_*_body.md
+sty_*_ac.md
+# <<< satelle (managed) <<<
