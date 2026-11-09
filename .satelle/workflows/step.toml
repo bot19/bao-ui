@@ -55,7 +55,10 @@ start = true
 # this step, so a repo names its own here when it authors one.
 status = "in_progress"
 agent = "executor"
-reviewers = ["satelle-story-intent-review"]
+# BAO-UI app version rule (sty_01213f4c): a story names the version it ships
+# as `version:X.Y.Z`; `version:none` opts out, `satelle story waive` skips one
+# check. The commit prefix is added by .githooks/commit-msg.
+reviewers = ["satelle-story-intent-review", "bao-story-version-check"]
 reviewer_agent = "reviewer"
 requires = ["raised"]
 # A child the orchestrator pinned at readiness (tag `placement:<in-loop|local|team:<path>>`)
@@ -67,7 +70,10 @@ placement_tag = "placement:"
 # deliberately: they run SERIALLY, against the concurrent default for a
 # multi-reviewer step.
 status = "done"
-reviewers = ["satelle-workflow-change-review", "satelle-story-scope-review", "satelle-story-done-review"]
+# BAO-UI app version rule (sty_01213f4c): a story names the version it ships
+# as `version:X.Y.Z`; `version:none` opts out, `satelle story waive` skips one
+# check. The commit prefix is added by .githooks/commit-msg.
+reviewers = ["satelle-workflow-change-review", "satelle-story-scope-review", "satelle-story-done-review", "bao-version-commits-check"]
 reviewer_agent = "reviewer"
 parallel = 0
 terminal = true
@@ -272,25 +278,3 @@ agent = "reviewer"
 when = "satelle-instruction-change-trigger"
 on = ["done"]
 for = ["*", "docs", "execution", "task"]
-
-# ================================================================
-# BAO-UI — APP VERSION RULE (sty_01213f4c)
-#
-# Every working-lane story names the app version it ships as a `version:X.Y.Z`
-# tag. Start refuses a story without one; close refuses unless package.json is
-# at that version and every commit since engagement carries the `[X.Y.Z]`
-# prefix that .githooks/commit-msg adds. Tag a story `version:none` to opt out,
-# or `satelle story waive` one check on one story.
-# `for = ["*"]` only: docs, agents-repair, containers and task runs ship no app
-# version.
-# ================================================================
-
-[[gate]]
-skill = "bao-story-version-check"
-on = ["in_progress"]
-for = ["*"]
-
-[[gate]]
-skill = "bao-version-commits-check"
-on = ["done"]
-for = ["*"]
