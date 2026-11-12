@@ -14,7 +14,12 @@ export function ratingToCssColor(rating: number): string {
   return `hsl(${hue} 65% 38%)`
 }
 
-export function formatRating(rating: number | null): string {
-  if (rating == null) return '–'
+/**
+ * Format a 1–5 rating to one decimal. A rating that is absent or not a finite
+ * number — `null`, `undefined`, `NaN`, `Infinity` — is the en-dash
+ * placeholder, the same guard `formatPriceLevel` applies to a price level.
+ */
+export function formatRating(rating: number | null | undefined): string {
+  if (rating == null || !Number.isFinite(rating)) return '–'
   return rating.toFixed(1)
 }
