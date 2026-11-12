@@ -84,6 +84,12 @@ after = ["bao-verdict-notes-check"]
 skill = "bao-checks"
 timeout = "15m"
 
+# The story the operator approved is the story that gets judged. Replays the
+# ledger: a criterion or body edited after the approval is a rejection, because
+# bao-story-done-review measures against live story text.
+[gates.criteria-unchanged]
+skill = "bao-criteria-unchanged-check"
+
 [gates.committed]
 skill = "bao-committed-check"
 
@@ -132,7 +138,7 @@ groups = [{ mode = "sequential", gates = ["story-version", "story-intent"] }]
 from = ["in_progress"]
 to = "ready"
 groups = [
-  { mode = "sequential", gates = ["committed", "version-commits", "checks"] },
+  { mode = "sequential", gates = ["criteria-unchanged", "committed", "version-commits", "checks"] },
   { mode = "parallel", gates = ["story-scope", "story-done", "workflow-change"] },
 ]
 

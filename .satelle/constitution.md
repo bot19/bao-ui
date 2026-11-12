@@ -83,11 +83,14 @@ the way in, `bao-version-commits-check` on the way out.
 
 Most of what used to be written here is now structure: the operator's sign-off
 is the `signoff` state, approval is per-entry because a record from an earlier
-visit does not count, and work cannot start unprompted because nothing performs
-in `signoff`. Those rules are deleted from this document rather than repeated —
-a rule stated in two places drifts in one of them.
+visit does not count, work cannot start unprompted because nothing performs in
+`signoff`, and the story that was approved is the story that gets judged —
+`bao-criteria-unchanged-check` replays the ledger on the way out of
+`in_progress` and rejects a criterion or body edited since the approval. Those
+rules are deleted from this document rather than repeated: a rule stated in two
+places drifts in one of them.
 
-Three things remain the session's own discipline, because no gate watches them:
+Two things remain the session's own discipline, because no gate watches them:
 
 1. **A block is surfaced, not routed around.** When a gate, hook or check
    refuses something, say what refused it and what it said, then stop. Do not
@@ -100,13 +103,9 @@ Three things remain the session's own discipline, because no gate watches them:
    not at every step inside it. Stopping mid-lane to ask a question the lane
    already answers wastes the approval that was given.
 
-3. **The criteria are fixed once approved.** `bao-story-intent-review` compares
-   the criteria against the approved text on the way into `in_progress`, but
-   nothing re-checks them after that. An edit to a criterion while the story is
-   being built is invisible to every gate, and it changes what the done judge
-   measures against. If a criterion turns out to be wrong, say so and take the
-   story back to `plan` — `in_progress -> plan` is a declared transition, and
-   it costs one more sign-off, which is the point.
+If a criterion turns out to be wrong, that is the first rule, not a reason to
+edit it: say so and take the story back to `plan`. `in_progress -> plan` is a
+declared transition, and it costs one more sign-off, which is the point.
 
 ## Where the process lives
 
