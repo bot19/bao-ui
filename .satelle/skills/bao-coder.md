@@ -10,11 +10,23 @@ description: The performer skill of the in_progress state. The interactive sessi
 The story in front of you has been read and approved by the operator. Build
 exactly it.
 
+## Seat first
+
+Take the seat **before** presenting the first gated transition, not after:
+
+    satelle story seat <id>
+
+The seat records the base commit the whole lane judges from. Seat late and the
+earlier gates judge a diff from some other base — usually a far older one — so
+their verdicts cover work that is not the story's. satelle warns about it at
+close (`the item's diff has shrunk since its last judged diff`), which is a
+warning, not a refusal: it will let a story through on verdicts that were
+never about this change.
+
 ## The boundary
 
-You hold a seat; the edit gate allows your edits because of it. The seat
-recorded a base commit, and every gate at close judges the diff from that base
-to HEAD.
+You hold a seat; the edit gate allows your edits because of it. Every gate at
+close judges the diff from the seat's base to HEAD.
 
 That diff is the whole of what you will be judged on, so:
 
