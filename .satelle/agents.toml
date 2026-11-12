@@ -1,0 +1,19 @@
+# agents.toml — the bindings delivery.toml names to perform states and judge gates.
+#
+# Only `claude` is installed on this machine, so there is no second CLI vendor
+# to put between the performer and its judge. The separation here is by model:
+# the work is done by whatever model your interactive session runs, and every
+# gate is judged by a different, cheaper one in its own read-only process.
+
+# The plan and in_progress performer: the interactive session itself. Nothing
+# is dispatched — you and the session do the work, under the edit gate, with a
+# seat on the item.
+[agents.session]
+command = "session"
+
+# The isolated read-only judge for every gate. A separate process per gate,
+# with no memory of the work it judges and no ability to change it.
+[agents.reviewer]
+command = "claude"
+model = "claude-sonnet-5-5"
+tools = ["Read", "Grep", "Glob"]
