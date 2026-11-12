@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+# Prefix the commit message with the in-progress Satelle story's app version,
+# e.g. "add tabs" -> "[1.0.1] add tabs". Gated at close by the
+# bao-version-commits-check skill (.satelle/skills/).
+#
+# No-op when: satelle is not installed, no story is in progress, the story is
+# tagged version:none, in-progress stories disagree on the version, the message
+# already carries the prefix, or this is a merge commit.
+# Skip one commit: git commit --no-verify
+
+msg_file=$1
+
+command -v satelle >/dev/null 2>&1 || exit 0
+git rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1 && exit 0
+
+versions=$(satelle story list --status in_progress --json 2>/dev/null |
+  sed -n 's/^[[:space:]]*"version:\([^"]*\)",\{0,1\}$/\1/p' | sort -u)
+
+[ -n "$versions" ] || exit 0
+if [ "$(printf '%s\n' "$versions" | wc -l | tr -d ' ')" != 1 ]; then
+  echo "commit-msg: in-progress stories name different versions; no prefix added" >&2
+  exit 0
+fi
+[ "$versions" = none ] && exit 0
+
+prefix="[$versions]"
+first=$(sed -n '1p' "$msg_file")
+case $first in
+  "$prefix"*) exit 0 ;;
+esac
+
+tmp=$(mktemp) || exit 0
+{ printf '%s ' "$prefix"; cat "$msg_file"; } > "$tmp" && mv "$tmp" "$msg_file"

@@ -35,35 +35,45 @@ import { UserAvatar } from '@/components/user/UserAvatar'
 import { ratingToCssColor } from '@/lib/ratingColor'
 import type { PlaceStatus } from '@/lib/placeStatus'
 
+/** Tokens, then the five atomic design levels, smallest to largest. */
 const PAGES = [
   ['tokens', 'Tokens'],
-  ['components', 'Components'],
+  ['atoms', 'Atoms'],
+  ['molecules', 'Molecules'],
+  ['organisms', 'Organisms'],
+  ['templates', 'Templates'],
+  ['pages', 'Pages'],
 ] as const
 
 type PageId = (typeof PAGES)[number][0]
 
-const TOKEN_SECTIONS = [
-  ['type', 'Type & colour'],
-  ['icon-buttons', 'Icon buttons'],
-  ['buttons', 'Text buttons'],
-  ['fields', 'Fields'],
-  ['choices', 'Choices'],
-  ['feedback', 'Feedback'],
-  ['chips', 'Chips & tags'],
-  ['people', 'Avatars & thumbs'],
-  ['chrome', 'Chrome'],
-  ['loading', 'Loading'],
-] as const
-
-const COMPONENT_SECTIONS = [
-  ['forms', 'Forms'],
-  ['nav', 'Nav'],
-] as const
-
 const SECTIONS_BY_PAGE = {
-  tokens: TOKEN_SECTIONS,
-  components: COMPONENT_SECTIONS,
-} as const
+  tokens: [['type', 'Type & colour']],
+  atoms: [
+    ['icon-buttons', 'Icon buttons'],
+    ['buttons', 'Text buttons'],
+    ['fields', 'Fields'],
+    ['feedback', 'Feedback'],
+    ['chips', 'Chips & tags'],
+    ['people', 'Avatars & thumbs'],
+  ],
+  molecules: [
+    ['choices', 'Choices'],
+    ['loading', 'Loading'],
+  ],
+  organisms: [
+    ['chrome', 'Chrome'],
+    ['forms', 'Forms'],
+    ['nav', 'Nav'],
+  ],
+  templates: [['templates-overview', 'Templates']],
+  pages: [['pages-overview', 'Pages']],
+} as const satisfies Record<PageId, readonly (readonly [string, string])[]>
+
+/** Old page ids that still resolve, so earlier links keep working. */
+const PAGE_ALIASES: Record<string, PageId> = {
+  components: 'organisms',
+}
 
 type CatalogLocation = {
   page: PageId
@@ -71,13 +81,14 @@ type CatalogLocation = {
 }
 
 function isPageId(value: string | null): value is PageId {
-  return value === 'tokens' || value === 'components'
+  return PAGES.some(([id]) => id === value)
 }
 
 function readLocation(): CatalogLocation {
   const params = new URLSearchParams(window.location.search)
   const rawPage = params.get('page')
-  const page: PageId = isPageId(rawPage) ? rawPage : 'tokens'
+  const aliased = rawPage ? (PAGE_ALIASES[rawPage] ?? rawPage) : null
+  const page: PageId = isPageId(aliased) ? aliased : 'tokens'
   const rawSection = params.get('section')
   const known = SECTIONS_BY_PAGE[page].some(([id]) => id === rawSection)
   return { page, section: known ? rawSection : null }
@@ -158,7 +169,7 @@ export function Catalog() {
           BAO UI <span className="text-neutral-400">v{__APP_VERSION__}</span>
         </h1>
 
-        <div role="tablist" aria-label="Catalog pages" className="mt-4 flex gap-6">
+        <div role="tablist" aria-label="Catalog pages" className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
           {PAGES.map(([id, label]) => {
             const selected = location.page === id
             return (
@@ -183,58 +194,89 @@ export function Catalog() {
           })}
         </div>
 
-        <nav aria-label="Catalog sections" className="mt-4 flex flex-wrap gap-2">
-          {sections.map(([id, label]) => {
-            const selected = location.section === id
-            return (
-              <a
-                key={id}
-                href={hrefFor(location.page, id)}
-                aria-current={selected ? 'true' : undefined}
-                className={
-                  selected
-                    ? 'rounded-full bg-ink px-3 py-1 text-sm text-white shadow-sm'
-                    : 'rounded-full bg-white px-3 py-1 text-sm text-neutral-700 shadow-sm hover:text-ink'
-                }
-                onClick={(event) => {
-                  event.preventDefault()
-                  go({ page: location.page, section: id })
-                }}
-              >
-                {label}
-              </a>
-            )
-          })}
-        </nav>
+        {sections.length > 1 ? (
+          <nav aria-label="Catalog sections" className="mt-4 flex flex-wrap gap-2">
+            {sections.map(([id, label]) => {
+              const selected = location.section === id
+              return (
+                <a
+                  key={id}
+                  href={hrefFor(location.page, id)}
+                  aria-current={selected ? 'true' : undefined}
+                  className={
+                    selected
+                      ? 'rounded-full bg-ink px-3 py-1 text-sm text-white shadow-sm'
+                      : 'rounded-full bg-white px-3 py-1 text-sm text-neutral-700 shadow-sm hover:text-ink'
+                  }
+                  onClick={(event) => {
+                    event.preventDefault()
+                    go({ page: location.page, section: id })
+                  }}
+                >
+                  {label}
+                </a>
+              )
+            })}
+          </nav>
+        ) : null}
       </header>
 
       <div className="space-y-14 pt-6 pb-10">
-        {location.page === 'tokens' ? <TokensPage /> : <ComponentsPage />}
+        <PageBody page={location.page} />
       </div>
     </div>
   )
 }
 
-function TokensPage() {
-  return (
-    <>
-      <TypeAndColour />
-      <IconButtons />
-      <TextButtons />
-      <Fields />
-      <Choices />
-      <Feedback />
-      <Chips />
-      <People />
-      <Chrome />
-      <Loading />
-    </>
-  )
+function PageBody({ page }: { page: PageId }) {
+  switch (page) {
+    case 'tokens':
+      return <TypeAndColour />
+    case 'atoms':
+      return (
+        <>
+          <IconButtons />
+          <TextButtons />
+          <Fields />
+          <Feedback />
+          <Chips />
+          <People />
+        </>
+      )
+    case 'molecules':
+      return (
+        <>
+          <Choices />
+          <Loading />
+        </>
+      )
+    case 'organisms':
+      return <OrganismsPage />
+    case 'templates':
+      return (
+        <Section id="templates-overview" title="Templates">
+          <p className="text-sm text-neutral-600">
+            Screen layouts built from organisms, with placeholder content: the map screen,
+            a place sheet, the auth screens.
+          </p>
+        </Section>
+      )
+    case 'pages':
+      return (
+        <Section id="pages-overview" title="Pages">
+          <p className="text-sm text-neutral-600">
+            Templates filled with real data, to check how screens look with long names,
+            empty lists, and full groups.
+          </p>
+        </Section>
+      )
+  }
 }
 
-function ComponentsPage() {
+function OrganismsPage() {
   return (
     <>
+      <Chrome />
       <Section id="forms" title="Forms">
         <p className="text-sm text-neutral-600">
           Signup, login, review, and the other full forms land here.
@@ -495,7 +537,6 @@ function Fields() {
             </label>
           </Specimen>
         ))}
-        <ComboboxSpecimen />
       </div>
     </Section>
   )
@@ -529,6 +570,7 @@ function Choices() {
       note="Price and status share one selected style. Activity and profile tabs are the same segmented control copied twice."
     >
       <div className="grid gap-4">
+        <ComboboxSpecimen />
         <StarSpecimen />
         <PriceSpecimen />
         <StatusSpecimen />

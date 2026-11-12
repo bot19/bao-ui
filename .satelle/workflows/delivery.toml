@@ -1,0 +1,166 @@
+# bao-ui's delivery lane. Adapted from the id4me common code lane
+# (id4me.pipelines satelle-lane/) with everything Azure DevOps and Jira
+# specific removed, and from the pre-1.0 embedded route's review rubrics.
+#
+# bao-ui is a personal GitHub repo on Netlify: no ticket system, no ADO
+# pipeline, no release.py. So the lane is shorter, and the control point that
+# id4me gets from a cold PR reviewer is the OPERATOR's instead — the signoff
+# state below, which no agent can leave.
+#
+#   plan -> signoff   the agent shapes the story; the machine checks it
+#   signoff           YOU read it and record approval. Nothing runs until then.
+#   -> in_progress    the agent builds
+#   -> ready          committed on the branch with the checks green
+#   -> done           on main, when you choose to ship it
+name = "delivery"
+
+# ----------------------------------------------------------------- states
+
+# You drop the feature in here, rough. The planner turns it into a story with
+# a stated behaviour and numbered acceptance criteria. Read-only: it writes the
+# story, never the code.
+[states.plan]
+start = true
+performer = { agent = "session", skill = "bao-plan" }
+
+# YOURS. No agent performs here, no agent may edit under a seat here, and no
+# transition out of it runs until you have recorded approval since the item
+# last entered it:
+#
+#   satelle story record <id> --file approval.md
+#
+# Run it from your own terminal: it retypes the id on /dev/tty, the kernel
+# refuses any call carrying SATELLE_SESSION, and the edit-gate hook refuses the
+# verb in an agent shell. A session cannot forge it.
+[states.signoff]
+performer = { operator = "story-approval" }
+
+[states.in_progress]
+performer = { agent = "session", skill = "bao-coder" }
+# Three rejected rounds in a row and it stops and hands the item to you rather
+# than grinding against a gate.
+hold = { rounds = 3, to = "held" }
+
+# Committed on the story's branch with the checks green: ready to release.
+# Not terminal - the work is built but not shipped.
+[states.ready]
+
+# On main. Terminal.
+[states.done]
+terminal = true
+
+[states.blocked]
+park = true
+resumes = true
+
+[states.held]
+park = true
+resumes = true
+
+[states.cancelled]
+terminal = true
+
+# ------------------------------------------------------------------ gates
+
+# --- stage 1: is the story worth your time to read?
+[gates.story-structure]
+skill = "bao-story-structure-check"
+
+[gates.story-create]
+skill = "bao-story-create-review"
+agent = "reviewer"
+after = ["bao-verdict-notes-check"]
+
+# --- stage 2: is the story buildable as written?
+[gates.story-intent]
+skill = "bao-story-intent-review"
+agent = "reviewer"
+after = ["bao-verdict-notes-check"]
+
+# --- stage 3: is it actually done?
+# The checks are the repo's own commands, run on the committed HEAD.
+[gates.checks]
+skill = "bao-checks"
+timeout = "15m"
+
+[gates.committed]
+skill = "bao-committed-check"
+
+[gates.story-scope]
+skill = "bao-story-scope-review"
+agent = "reviewer"
+after = ["bao-verdict-notes-check"]
+
+[gates.story-done]
+skill = "bao-story-done-review"
+agent = "reviewer"
+after = ["bao-verdict-notes-check"]
+
+# Skipped unless the diff touches .satelle/. Without it an agent can answer a
+# rejecting gate by deleting the gate.
+[gates.workflow-change]
+skill = "bao-workflow-change-review"
+agent = "reviewer"
+trigger = "bao-workflow-change-trigger"
+after = ["bao-verdict-notes-check"]
+
+# --- stage 4: shipping
+[gates.merged]
+skill = "bao-merged-check"
+
+# ------------------------------------------------------------ transitions
+
+# 1  SHAPE — the machine checks the story before you ever read it.
+[[transition]]
+from = ["plan"]
+to = "signoff"
+groups = [{ mode = "sequential", gates = ["story-structure", "story-create"] }]
+
+# 2  START WORK — only reachable once you have recorded approval.
+[[transition]]
+from = ["signoff"]
+to = "in_progress"
+groups = [{ mode = "sequential", gates = ["story-intent"] }]
+
+# 3  BUILD DONE — cheap deterministic checks first, then the three judges together
+# so one round returns every finding.
+[[transition]]
+from = ["in_progress"]
+to = "ready"
+groups = [
+  { mode = "sequential", gates = ["committed", "checks"] },
+  { mode = "parallel", gates = ["story-scope", "story-done", "workflow-change"] },
+]
+
+# 4  RELEASE — your call, whenever you want it on main.
+[[transition]]
+from = ["ready"]
+to = "done"
+groups = [{ mode = "sequential", gates = ["merged"] }]
+
+# Rework: a reject that needs the story rethought goes back to plan, which
+# sends it through signoff again.
+[[transition]]
+from = ["in_progress", "ready"]
+to = "plan"
+
+# Parks and exits.
+[[transition]]
+from = ["*"]
+to = "blocked"
+
+[[transition]]
+from = ["blocked"]
+to = "@prior"
+
+[[transition]]
+from = ["in_progress"]
+to = "held"
+
+[[transition]]
+from = ["held"]
+to = "@prior"
+
+[[transition]]
+from = ["*", "blocked"]
+to = "cancelled"
