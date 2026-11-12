@@ -1,11 +1,9 @@
-# bao-ui's delivery lane. Adapted from the id4me common code lane
-# (id4me.pipelines satelle-lane/) with everything Azure DevOps and Jira
-# specific removed, and from the pre-1.0 embedded route's review rubrics.
+# bao-ui's delivery lane. The review rubrics are adapted from satelle 0.0.x's
+# embedded defaults; everything else is authored here.
 #
-# bao-ui is a personal GitHub repo on Netlify: no ticket system, no ADO
-# pipeline, no release.py. So the lane is shorter, and the control point that
-# id4me gets from a cold PR reviewer is the OPERATOR's instead — the signoff
-# state below, which no agent can leave.
+# bao-ui is a personal GitHub repo on Netlify: no ticket system, no CI
+# pipeline, no release automation. So the lane is short, and its control point
+# is the OPERATOR — the signoff state below, which no agent can leave.
 #
 #   plan -> signoff   the agent shapes the story; the machine checks it
 #   signoff           YOU read it and record approval. Nothing runs until then.
