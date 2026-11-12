@@ -42,7 +42,9 @@ One workflow, `.satelle/workflows/delivery.toml`. Read it rather than guessing;
   written in this state.
 - **signoff** — the operator's. No agent performs here, no agent may edit under
   a seat here, and no transition out runs until the operator records approval
-  at their own terminal.
+  at their own terminal. `.satelle/operator.sh` carries the short verbs they
+  use there — `waiting`, `story <id>`, `approve <id>` — and says how to install
+  them. A session names the verb and stops; it cannot run it.
 - **in_progress** — the session builds, under a seat, committing on a branch.
   Three rejected rounds in a row park the story in `held`.
 - **ready** — committed with the checks green and the judges satisfied. Built,

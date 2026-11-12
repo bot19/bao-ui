@@ -27,6 +27,10 @@ performer = { agent = "session", skill = "bao-plan" }
 #
 #   satelle story record <id> --file approval.md
 #
+# or, with .satelle/operator.sh loaded, just:
+#
+#   approve <id> [note]
+#
 # Run it from your own terminal: it retypes the id on /dev/tty, the kernel
 # refuses any call carrying SATELLE_SESSION, and the edit-gate hook refuses the
 # verb in an agent shell. A session cannot forge it.
