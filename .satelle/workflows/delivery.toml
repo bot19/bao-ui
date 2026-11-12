@@ -74,6 +74,13 @@ agent = "reviewer"
 after = ["bao-verdict-notes-check"]
 
 # --- stage 2: is the story buildable as written?
+
+# The story the operator approved is the story the content judge accepted.
+# Replays the ledger: a body or criterion edited since the item last entered
+# signoff is a rejection, because bao-story-create-review never read it.
+[gates.story-reviewed]
+skill = "bao-story-reviewed-check"
+
 [gates.story-version]
 skill = "bao-story-version-check"
 
@@ -134,7 +141,7 @@ groups = [{ mode = "sequential", gates = ["story-structure", "story-create"] }]
 [[transition]]
 from = ["signoff"]
 to = "in_progress"
-groups = [{ mode = "sequential", gates = ["story-version", "story-intent"] }]
+groups = [{ mode = "sequential", gates = ["story-reviewed", "story-version", "story-intent"] }]
 
 # 3  BUILD DONE — cheap deterministic checks first, then the three judges together
 # so one round returns every finding.
@@ -152,10 +159,15 @@ from = ["ready"]
 to = "done"
 groups = [{ mode = "sequential", gates = ["merged"] }]
 
-# Rework: a reject that needs the story rethought goes back to plan, which
-# sends it through signoff again.
+# Rework: a story that needs rethinking goes back to plan, which sends it
+# through the structure check and the content judge again, and then through
+# signoff for a second approval.
+#
+# Declared from signoff too. Without it, a story waiting to be read is the one
+# state with no route back, so a revision asked for there can only be made in
+# place - and the operator then approves text no judge has seen.
 [[transition]]
-from = ["in_progress", "ready"]
+from = ["signoff", "in_progress", "ready"]
 to = "plan"
 
 # Parks and exits.

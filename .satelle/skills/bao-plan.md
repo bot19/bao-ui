@@ -47,3 +47,19 @@ split now.
 Present `plan -> signoff`. The structure check and the content judge run. When
 both accept, the item waits in `signoff` for the operator's record, and you
 stop: that state is theirs, and nothing you run can leave it.
+
+## If the operator asks for changes while it waits in signoff
+
+Take the story back and revise it there:
+
+    satelle story set <id> --status plan
+
+Then present `plan -> signoff` again, so the structure check and the content
+judge read the revision.
+
+Do not edit the story where it stands. `satelle story set` permits it, but the
+revised text would reach the operator with no judge having read it, and
+`bao-story-reviewed-check` then refuses to let it be built — rightly, because
+the only review such a story carries is the operator's own.
+
+The second sign-off is the cost, and it is the point.
