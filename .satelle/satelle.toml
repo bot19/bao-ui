@@ -8,8 +8,10 @@ default = "delivery"
 # workflow = "default"
 # category = "bug"        # and/or tag = "...", kind = "..."
 
-# [hook]
-# inject = ["docs/principles.md"]   # files the context hook prints at session start
+[hook]
+# Printed at session start, so every session begins with the same order-zero
+# context. Judges are dispatched with the item and their rubric, not with this.
+inject = [".satelle/constitution.md"]
 
 [rules]
 # A judge may not run the same model as the performer whose work it judges.

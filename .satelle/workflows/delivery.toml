@@ -70,6 +70,9 @@ agent = "reviewer"
 after = ["bao-verdict-notes-check"]
 
 # --- stage 2: is the story buildable as written?
+[gates.story-version]
+skill = "bao-story-version-check"
+
 [gates.story-intent]
 skill = "bao-story-intent-review"
 agent = "reviewer"
@@ -83,6 +86,9 @@ timeout = "15m"
 
 [gates.committed]
 skill = "bao-committed-check"
+
+[gates.version-commits]
+skill = "bao-version-commits-check"
 
 [gates.story-scope]
 skill = "bao-story-scope-review"
@@ -118,7 +124,7 @@ groups = [{ mode = "sequential", gates = ["story-structure", "story-create"] }]
 [[transition]]
 from = ["signoff"]
 to = "in_progress"
-groups = [{ mode = "sequential", gates = ["story-intent"] }]
+groups = [{ mode = "sequential", gates = ["story-version", "story-intent"] }]
 
 # 3  BUILD DONE — cheap deterministic checks first, then the three judges together
 # so one round returns every finding.
@@ -126,7 +132,7 @@ groups = [{ mode = "sequential", gates = ["story-intent"] }]
 from = ["in_progress"]
 to = "ready"
 groups = [
-  { mode = "sequential", gates = ["committed", "checks"] },
+  { mode = "sequential", gates = ["committed", "version-commits", "checks"] },
   { mode = "parallel", gates = ["story-scope", "story-done", "workflow-change"] },
 ]
 
