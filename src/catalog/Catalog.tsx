@@ -72,6 +72,14 @@ const SECTIONS_BY_PAGE = {
   pages: [['pages-overview', 'Pages']],
 } as const satisfies Record<PageId, readonly (readonly [string, string])[]>
 
+/** A short line shown in the header under the tabs (and section links). Any page may have one. */
+const PAGE_DESCRIPTIONS: Partial<Record<PageId, string>> = {
+  templates:
+    'Screen layouts built from organisms, with placeholder content: the map screen, a place sheet, the auth screens.',
+  pages:
+    'Templates filled with real data, to check how screens look with long names, empty lists, and full groups.',
+}
+
 /** Old page ids that still resolve, so earlier links keep working. */
 const PAGE_ALIASES: Record<string, PageId> = {
   components: 'organisms',
@@ -115,6 +123,7 @@ const PHOTO =
 export function Catalog() {
   const [location, setLocation] = useState(readLocation)
   const sections = SECTIONS_BY_PAGE[location.page]
+  const description = PAGE_DESCRIPTIONS[location.page]
 
   useLayoutEffect(() => {
     const header = document.querySelector('[data-catalog-header]')
@@ -221,6 +230,10 @@ export function Catalog() {
             })}
           </nav>
         ) : null}
+
+        {description ? (
+          <p className="mt-4 max-w-2xl text-sm text-neutral-600">{description}</p>
+        ) : null}
       </header>
 
       <div className="space-y-14 pt-6 pb-10">
@@ -257,19 +270,13 @@ function PageBody({ page }: { page: PageId }) {
     case 'templates':
       return (
         <Section id="templates-overview" title="Templates">
-          <p className="text-sm text-neutral-600">
-            Screen layouts built from organisms, with placeholder content: the map screen,
-            a place sheet, the auth screens.
-          </p>
+          <p className="text-sm text-neutral-600">Coming soon.</p>
         </Section>
       )
     case 'pages':
       return (
         <Section id="pages-overview" title="Pages">
-          <p className="text-sm text-neutral-600">
-            Templates filled with real data, to check how screens look with long names,
-            empty lists, and full groups.
-          </p>
+          <p className="text-sm text-neutral-600">Coming soon.</p>
         </Section>
       )
   }
