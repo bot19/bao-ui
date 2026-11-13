@@ -34,6 +34,7 @@ import {
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { ratingToCssColor } from '@/lib/ratingColor'
 import type { PlaceStatus } from '@/lib/placeStatus'
+import { SPECIMEN_GRID } from './layout'
 
 /** Tokens, then the five atomic design levels, smallest to largest. */
 const PAGES = [
@@ -302,7 +303,7 @@ function TypeAndColour() {
 
   return (
     <Section id="type" title="Type & colour">
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className={SPECIMEN_GRID}>
         <Specimen name="Display" source="index.css">
           <BrandWordmark as="p" className="text-3xl" />
           <p className="mt-2 text-sm text-neutral-600">
@@ -336,7 +337,7 @@ function IconButtons() {
       title="Icon buttons"
       note="IconButton is the shared control. Auth screens still draw their own back button, and the map add button overrides the colours."
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={SPECIMEN_GRID}>
         <Specimen name="Surface" source="components/ui/IconButton.tsx">
           <Row>
             <IconButton aria-label="Close">
@@ -458,7 +459,7 @@ function TextButtons() {
       title="Text buttons"
       note="Same ink button, six paddings. Disabled opacity is 60 in most places and 50 on the category action, which also has no hover style."
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={SPECIMEN_GRID}>
         {filled.map(([name, source, className]) => (
           <Specimen key={source + name} name={name} source={source}>
             <button type="button" className={className}>
@@ -528,7 +529,7 @@ function Fields() {
       title="Fields"
       note="Inputs under 16px get zoomed by iOS. The email and friend-code fields are written as text-sm. Global CSS forces 16px, so the utility and the rendered size disagree."
     >
-      <div className="grid gap-4">
+      <div className={SPECIMEN_GRID}>
         {fields.map(([name, source, className, detail]) => (
           <Specimen key={name} name={name} source={source}>
             <label className="block text-sm font-medium text-neutral-800">
@@ -569,7 +570,7 @@ function Choices() {
       title="Choices"
       note="Price and status share one selected style. Activity and profile tabs are the same segmented control copied twice."
     >
-      <div className="grid gap-4">
+      <div className={SPECIMEN_GRID}>
         <ComboboxSpecimen />
         <StarSpecimen />
         <PriceSpecimen />
@@ -643,7 +644,7 @@ function SegmentedSpecimen() {
 function Feedback() {
   return (
     <Section id="feedback" title="Feedback">
-      <div className="grid gap-3">
+      <div className={SPECIMEN_GRID}>
         <InfoBox variant="error">Couldn&apos;t save that review.</InfoBox>
         <InfoBox variant="warning">This place may already be in the group.</InfoBox>
         <InfoBox variant="info">Share your friend code to connect.</InfoBox>
@@ -671,7 +672,7 @@ function Chips() {
   const [tags, setTags] = useState(['ramen', 'late-night'])
   return (
     <Section id="chips" title="Chips & tags">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={SPECIMEN_GRID}>
         <Specimen name="Removable pill" source="components/ui/RemovablePill.tsx">
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
@@ -713,7 +714,7 @@ function People() {
       title="Avatars & thumbs"
       note="UserAvatar defaults to a rounded square. Friend rows and the leaderboard pass rounded-full. Review thumbs are always rounded-lg."
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={SPECIMEN_GRID}>
         <Specimen name="Default avatar" source="components/user/UserAvatar.tsx">
           <UserAvatar username="Ada Lovelace" />
         </Specimen>
@@ -749,7 +750,7 @@ function Chrome() {
 
   return (
     <Section id="chrome" title="Chrome">
-      <div className="grid gap-4">
+      <div className={SPECIMEN_GRID}>
         <Specimen name="Brand lockup" source="components/brand/BrandLockup.tsx">
           <BrandLockup align="center" />
         </Specimen>
@@ -885,7 +886,7 @@ function Chrome() {
 function Loading() {
   return (
     <Section id="loading" title="Loading" note="Skeleton shapes follow the real covers, rows, and rating pill.">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className={SPECIMEN_GRID}>
         <Specimen name="Place panel" source="components/ui/skeleton/Skeleton.tsx">
           <SkeletonPlacePanel />
         </Specimen>
