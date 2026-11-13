@@ -48,6 +48,21 @@ Present `plan -> signoff`. The structure check and the content judge run. When
 both accept, the item waits in `signoff` for the operator's record, and you
 stop: that state is theirs, and nothing you run can leave it.
 
+## Show the operator what they are approving
+
+Every time a story enters `signoff` — first entry or after rework — your reply
+shows the story as satelle stores it. Read it with `satelle story get <id>
+--json` **after** the transition is accepted; never retype it from your draft,
+because what the operator reads must be what they approve.
+
+1. A table of fields: ID, title, status, version tag, workflow.
+2. A numbered table of the acceptance criteria, wording verbatim.
+3. The full body, verbatim, below the tables.
+4. The exact command: `approve <id>`.
+
+Reviewer caveats from the plan gates go after all of that, under their own
+heading, so nothing in them reads as part of the story.
+
 ## If the operator asks for changes while it waits in signoff
 
 Take the story back and revise it there:

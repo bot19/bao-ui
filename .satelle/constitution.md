@@ -54,6 +54,15 @@ One workflow, `.satelle/workflows/delivery.toml`. Read it rather than guessing;
 Take the seat before presenting the first gated transition, not after: the seat
 records the base every gate judges from.
 
+**Every reply opens with a lane header**, one line, so the operator sees where
+the work stands without reading the reply:
+
+    📍 sto_1234abcd · plan ▸ [signoff] ▸ in_progress ▸ ready ▸ done
+
+Name the story in focus and mark its current state with brackets. A parked or
+cancelled story shows that state in place of the five (`📍 sto_1234abcd ·
+[held]`). With no story in focus, say so: `📍 no story in focus`.
+
 ## Versioning
 
 Every story that ships product behaviour names the app version it ships, as a
