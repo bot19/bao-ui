@@ -75,6 +75,12 @@ after = ["bao-verdict-notes-check"]
 
 # --- stage 2: is the story buildable as written?
 
+# Only an approval moves a story forward. satelle lets any operator record
+# unlock any exit from signoff; this reads the newest one since entry and
+# accepts only "approved", so a rework or cancel record cannot start the build.
+[gates.approval-word]
+skill = "bao-approval-word-check"
+
 # The story the operator approved is the story the content judge accepted.
 # Replays the ledger: a body or criterion edited since the item last entered
 # signoff is a rejection, because bao-story-create-review never read it.
@@ -141,7 +147,7 @@ groups = [{ mode = "sequential", gates = ["story-structure", "story-create"] }]
 [[transition]]
 from = ["signoff"]
 to = "in_progress"
-groups = [{ mode = "sequential", gates = ["story-reviewed", "story-version", "story-intent"] }]
+groups = [{ mode = "sequential", gates = ["approval-word", "story-reviewed", "story-version", "story-intent"] }]
 
 # 3  BUILD DONE — cheap deterministic checks first, then the three judges together
 # so one round returns every finding.

@@ -35,9 +35,9 @@ Its sibling guards the next window. This one asks whether the operator read
 what the judge accepted; `bao-criteria-unchanged-check` asks whether the
 builder shipped what the operator approved.
 
-A revision is not an obstacle to route around. Take the story back to `plan`
-(`satelle story set <id> --status plan`), revise it there, and present
-`plan -> signoff` again. That costs one more sign-off, which is the point.
+A revision is not an obstacle to route around. The operator takes the story
+back to `plan` with `rework <id>`, it is revised there, and `plan -> signoff`
+is presented again. That costs one more sign-off, which is the point.
 
 ```sh
 set -u
@@ -88,13 +88,13 @@ case $out in
     exit 0 ;;
   NOREVIEW)
     echo "$sid carries no plan -> signoff transition on its ledger, so no content judge has accepted it"
-    echo "take it to plan and present the transition:"
-    echo "  satelle story set $sid --status plan"
+    echo "the operator sends it back to plan, where the transition is presented again:"
+    echo "  rework $sid"
     exit 1 ;;
 esac
 
 echo "$sid: $out"
-echo "restore the accepted text, or take it back to plan so the judge reads the revision:"
-echo "  satelle story set $sid --status plan"
+echo "restore the accepted text, or the operator sends it back to plan so the judge reads the revision:"
+echo "  rework $sid"
 exit 1
 ```

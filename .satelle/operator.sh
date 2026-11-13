@@ -32,6 +32,11 @@
 #   waiting        what is sitting in signoff, waiting on you
 #   story <id>     the story, then where it is and what its gates said
 #   approve <id>   record your approval so the story can leave signoff
+#   rework <id>    send a story in signoff back to plan for changes
+#   cancel <id>    drop a story in signoff
+#
+# Each record's first line is its label: approved, rework or cancel.
+# bao-approval-word-check lets a story into in_progress only on "approved".
 #
 
 # approve <id> [note...]   record approval on an item in an operator state
@@ -48,9 +53,42 @@ approve() {
     return 2
   fi
   shift
-  local note=${*:-approved}
-  local f="${TMPDIR:-/tmp}/satelle-approval-$id.md"
-  printf '%s\n\nrecorded by %s at %s\n' "$note" "${USER:-operator}" "$(date -u +%FT%TZ)" > "$f"
+  _satelle_word "$id" approved "$*"
+}
+
+# rework <id> [note...]   record "rework", then move the story signoff -> plan
+rework() {
+  if [ -z "$1" ]; then
+    echo "usage: rework <item-id> [note]" >&2
+    return 2
+  fi
+  local id=$1
+  shift
+  _satelle_word "$id" rework "$*" && satelle story set "$id" --status plan
+}
+
+# cancel <id> [note...]   record "cancel", then move the story signoff -> cancelled
+cancel() {
+  if [ -z "$1" ]; then
+    echo "usage: cancel <item-id> [note]" >&2
+    return 2
+  fi
+  local id=$1
+  shift
+  _satelle_word "$id" cancel "$*" && satelle story set "$id" --status cancelled
+}
+
+# _satelle_word <id> <label> [note]   the shared record step. The label is
+# always the first line, so bao-approval-word-check can read it; the note, if
+# any, follows it.
+_satelle_word() {
+  local id=$1 label=$2 note=$3
+  local f="${TMPDIR:-/tmp}/satelle-$label-$id.md"
+  {
+    printf '%s\n' "$label"
+    [ -n "$note" ] && printf '\n%s\n' "$note"
+    printf '\nrecorded by %s at %s\n' "${USER:-operator}" "$(date -u +%FT%TZ)"
+  } > "$f"
   satelle story record "$id" --file "$f"
 }
 

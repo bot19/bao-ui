@@ -42,11 +42,21 @@ If the idea is really two stories, say so and split it. The scope rule is
 judged twice — at create and again at close — so a bundled story is cheaper to
 split now.
 
-## Then
+## Shape it together, in plan
 
-Present `plan -> signoff`. The structure check and the content judge run. When
-both accept, the item waits in `signoff` for the operator's record, and you
-stop: that state is theirs, and nothing you run can leave it.
+Plan is where the conversation happens. After every draft or revision, show
+the stored story in the same tables used at signoff (below), read with
+`satelle story get <id> --json`, and ask what to change. Revising in plan
+costs nothing, so loop as often as the operator wants.
+
+## Then, only when the operator is happy
+
+Present `plan -> signoff` only after the operator says they are happy with
+the story — not straight after your first draft. The structure check and the
+content judge run; if either rejects, you are still in plan, so revise and
+show the tables again. When both accept, the item waits in `signoff` for the
+operator's record, and you stop: that state is theirs, and nothing you run can
+leave it.
 
 ## Show the operator what they are approving
 
@@ -65,16 +75,16 @@ heading, so nothing in them reads as part of the story.
 
 ## If the operator asks for changes while it waits in signoff
 
-Take the story back and revise it there:
-
-    satelle story set <id> --status plan
-
-Then present `plan -> signoff` again, so the structure check and the content
-judge read the revision.
-
-Do not edit the story where it stands. `satelle story set` permits it, but the
+**Never edit a story in signoff.** `satelle story set` permits it, but the
 revised text would reach the operator with no judge having read it, and
-`bao-story-reviewed-check` then refuses to let it be built — rightly, because
-the only review such a story carries is the operator's own.
+`bao-story-reviewed-check` then refuses to let it be built.
 
-The second sign-off is the cost, and it is the point.
+You cannot send it back yourself either: satelle refuses every exit from
+signoff until the operator has recorded their word. Name the verb and stop:
+
+    rework <id> [note]     back to plan, for changes
+    cancel <id> [note]     drop it
+
+Once it is in plan, revise it there, show the tables, and present
+`plan -> signoff` again when the operator is happy. The second sign-off is the
+cost, and it is the point.
