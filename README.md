@@ -29,6 +29,59 @@ GitHub Packages is the intended feed. **The GitHub repo is public**, the package
 
 Because the repo is public, nothing committed here names an employer, a client, a private repository or an internal tool.
 
+## How work moves
+
+Every change is a story, driven through one lane by [satelle](.satelle/). The agent does the shaping and building; you hold the two decisions: approving a story, and merging to main.
+
+```
+PLAN  ◄──── "change X" ──── agent revises, shows the story as tables
+  │                         (loop as often as you like; it costs nothing)
+  │ you: "happy"
+  ▼
+SIGNOFF  (yours: nothing moves until you run a command)
+  ├─ approve <id> ──► IN_PROGRESS ──► READY ──► you merge ──► DONE
+  │                   agent builds    committed,             on main
+  │                                   checks green
+  ├─ rework <id>  ──► back to PLAN
+  └─ cancel <id>  ──► CANCELLED
+```
+
+- **ready** means built, committed on the branch, with the checks and reviewers satisfied. It is not shipped.
+- **done** means on `origin/main`. Merging is your call, whenever you choose.
+
+### Your commands
+
+Run these in your own terminal. The agent cannot run `approve`, `rework` or `cancel`; it names the one you need and stops.
+
+| Command | What it does | When |
+|---|---|---|
+| `waiting` | Lists stories sitting in signoff | Checking what needs you |
+| `story <id>` | Shows a story, where it is, and what its gates said | Reading before deciding |
+| `approve <id> [note]` | Records your approval; the agent then starts building | You are happy with the story as shown |
+| `rework <id> [note]` | Records "rework" and sends the story back to plan | You want changes after it reached signoff |
+| `cancel <id> [note]` | Records "cancel" and drops the story | It is no longer wanted |
+
+Those three each ask you to retype the story ID, so a session cannot record your word for you.
+
+**One-time setup** to load the commands in every new terminal:
+
+```sh
+mkdir -p ~/.satelle
+cp .satelle/operator-loader.sh ~/.satelle/approve.sh
+echo '[ -f "$HOME/.satelle/approve.sh" ] && . "$HOME/.satelle/approve.sh"' >> ~/.zshrc
+```
+
+Or load them for one shell with `. .satelle/operator.sh`.
+
+### The full rules
+
+This section explains the process; the rules themselves live in `.satelle/` and win if anything here disagrees:
+
+- [constitution.md](.satelle/constitution.md): what the agent must know and do in this repo
+- [workflows/delivery.toml](.satelle/workflows/delivery.toml): the states, gates and transitions
+- [skills/bao-plan.md](.satelle/skills/bao-plan.md): how a story is shaped in plan
+- [operator.sh](.satelle/operator.sh): your commands
+
 ## Roadmap
 
 - **Storybook** for isolated component stories, controls, and the docs that replace this single catalog page.
