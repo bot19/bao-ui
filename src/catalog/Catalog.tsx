@@ -34,6 +34,7 @@ import {
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { ratingToCssColor } from '@/lib/ratingColor'
 import type { PlaceStatus } from '@/lib/placeStatus'
+import { version } from '../../package.json'
 import { SPECIMEN_GRID } from './layout'
 
 /** Tokens, then the five atomic design levels, smallest to largest. */
@@ -167,7 +168,7 @@ export function Catalog() {
         className="sticky top-0 z-40 -mx-4 border-b border-neutral-200 bg-neutral-100/95 px-4 pt-6 pb-4 backdrop-blur sm:-mx-6 sm:px-6"
       >
         <h1 className="font-display text-3xl text-ink">
-          BAO UI <span className="text-neutral-400">v{__APP_VERSION__}</span>
+          BAO UI <span className="text-neutral-400">v{version}</span>
         </h1>
 
         <div role="tablist" aria-label="Catalog pages" className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
